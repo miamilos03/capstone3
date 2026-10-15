@@ -1,0 +1,5 @@
+client = OpenSearch(
+    hosts=[{"host": "search-orchestrator-search-mm-opedetj4qtj6oawky4mmyooc4a.us-east-1.es.amazonaws.com"
+, "port": 443}],
+    http_auth=auth, use_ssl=True, connection_class=RequestsHttpConnection
+)
