@@ -1,0 +1,644 @@
+1)
+/home/du_356061-
+1790187634/document-ingestion-pipeline-lab/.venv/bin/python /home/du_356061-1790187634/document-ingestion-pipeline-lab/check_rds_status.py
+clients: 5 rows
+consultants: 6 rows
+invoices: 7 rows
+projects: 6 rows
+/home/du_356061-1790187634/document-ingestion-pipeline-lab/.venv/bin/python /home/du_356061-1790187634/document-ingestion-pipeline-lab/check_opensearch.py
+Document count: 8
+
+2) 
+/home/du_356061-1790187634/deployment-patterns-on-aws/capstone3/.venv/bin/python /home/du_356061-1790187634/deployment-patterns-on-aws/capstone3/check_agents.py
+
+SQL agent
+Question: How many active projects do we have?
+Top-level keys: ['success', 'answer', 'sources', 'metadata']
+Exact interface: True
+Success: True
+Sources: ["SELECT COUNT(*) AS active_project_count\nFROM projects\nWHERE status = 'active'"]
+Metadata keys: ['validation', 'token_usage']
+
+Retrieval agent
+Question: What is our onboarding process?
+Top-level keys: ['success', 'answer', 'sources', 'metadata']
+Exact interface: True
+Success: True
+Sources: ['q2-2026-client-report.pdf', 'cloud-migration-playbook.pdf', 'q2-2026-client-report.pdf', 'cloud-migration-playbook.pdf', 'remote-work-policy.pdf']
+Metadata keys: ['chunk_count', 'chunk_scores', 'grounding_check', 'token_usage']
+
+PASS: Both tools share the required interface.
+
+3)
+/home/du_356061-1790187634/deployment-patterns-on-aws/capstone3/.venv/bin/python /home/du_356061-1790187634/deployment-patterns-on-aws/capstone3/check_registry.py
+
+Tool: run_sql_agent
+Description: Use for structured-data questions answered from the RDS database, including counts, lists, statuses, dates, budgets, contract values, clients, projects, consultants, and invoices. Do not use for onboarding procedures, policies, process descriptions, or other document-based questions. Do not use to modify data; this tool is read-only and executes only validated SELECT queries.
+Callable registered: True
+
+Tool: run_retrieval_agent
+Description: Use for questions answered from indexed documents, including onboarding procedures, policies, operating processes, guidelines, definitions, and other narrative content. Do not use for database counts, financial calculations, project statuses, or questions requiring current RDS records.
+Callable registered: True
+
+4)
+
+======================================================================
+SQL-ONLY TEST
+Question: How many active projects do we have?
+[Router] route=sql
+[Orchestrator] Calling SQL agent
+
+Printed state:
+{'final_answer': 'Based on the available data:\n'
+                 '\n'
+                 '**[SQL agent]** There are **4 active projects** in the '
+                 'database.\n'
+                 '*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM '
+                 "projects WHERE status = 'active'`)*",
+ 'question': 'How many active projects do we have?',
+ 'retrieval_result': None,
+ 'route': 'sql',
+ 'sql_result': {'answer': 'There are **4** active projects.',
+                'metadata': {'token_usage': {'input': 41, 'output': 11},
+                             'validation': 'PASSED'},
+                'sources': ['SELECT COUNT(*) AS active_project_count\n'
+                            'FROM projects\n'
+                            "WHERE status = 'active'"],
+                'success': True},
+ 'token_usage': {'classification': {'input': 0,
+                                    'method': 'keyword_rules',
+                                    'output': 0},
+                 'sql_agent': {'input': 41, 'output': 11},
+                 'synthesis': {'input': 159, 'output': 55}}}
+
+Route: sql
+SQL result present: True
+Retrieval result present: False
+Final answer:
+Based on the available data:
+
+**[SQL agent]** There are **4 active projects** in the database.
+*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM projects WHERE status = 'active'`)*
+
+======================================================================
+RETRIEVAL-ONLY TEST
+Question: What is our onboarding process?
+[Router] route=retrieval
+[Orchestrator] Calling retrieval agent
+
+Printed state:
+{'final_answer': "Based on the agent results available, I'm unable to answer "
+                 'your question about the onboarding process.\n'
+                 '\n'
+                 '**[Retrieval agent]** searched through the available '
+                 'documents — including `q2-2026-client-report.pdf`, '
+                 '`cloud-migration-playbook.pdf`, and `remote-work-policy.pdf` '
+                 '— but none of these sources contain information about an '
+                 'onboarding process.\n'
+                 '\n'
+                 'No SQL database results were relevant to this question '
+                 'either.\n'
+                 '\n'
+                 '**Recommendation:** You may want to check if there is a '
+                 'dedicated onboarding document (e.g., an employee handbook, '
+                 "onboarding guide, or HR policy document) that hasn't been "
+                 'uploaded to the system yet. If such a document exists, '
+                 'adding it to the knowledge base would allow me to answer '
+                 'this question accurately.',
+ 'question': 'What is our onboarding process?',
+ 'retrieval_result': {'answer': 'I cannot find this information in the '
+                                'provided documents. The provided sources '
+                                'cover topics such as a client engagement '
+                                'report, a cloud migration playbook, and a '
+                                'remote work policy, but none of them contain '
+                                'information about an onboarding process.',
+                      'metadata': {'chunk_count': 5,
+                                   'chunk_scores': [0.666226,
+                                                    0.6661491,
+                                                    0.661102,
+                                                    0.6295325,
+                                                    0.6156007],
+                                   'grounding_check': True,
+                                   'token_usage': {'input': 2424,
+                                                   'output': 50}},
+                      'sources': ['q2-2026-client-report.pdf',
+                                  'cloud-migration-playbook.pdf',
+                                  'q2-2026-client-report.pdf',
+                                  'cloud-migration-playbook.pdf',
+                                  'remote-work-policy.pdf'],
+                      'success': True},
+ 'route': 'retrieval',
+ 'sql_result': None,
+ 'token_usage': {'classification': {'input': 0,
+                                    'method': 'keyword_rules',
+                                    'output': 0},
+                 'retrieval_agent': {'input': 2424, 'output': 50},
+                 'synthesis': {'input': 232, 'output': 169}}}
+
+Route: retrieval
+SQL result present: False
+Retrieval result present: True
+Final answer:
+Based on the agent results available, I'm unable to answer your question about the onboarding process.
+
+**[Retrieval agent]** searched through the available documents — including `q2-2026-client-report.pdf`, `cloud-migration-playbook.pdf`, and `remote-work-policy.pdf` — but none of these sources contain information about an onboarding process.
+
+No SQL database results were relevant to this question either.
+
+**Recommendation:** You may want to check if there is a dedicated onboarding document (e.g., an employee handbook, onboarding guide, or HR policy document) that hasn't been uploaded to the system yet. If such a document exists, adding it to the knowledge base would allow me to answer this question accurately.
+
+======================================================================
+BOTH-SOURCES TEST
+Question: How many active projects do we have, and what is our onboarding process?
+[Router] route=both
+[Orchestrator] Calling SQL agent
+[Orchestrator] Calling retrieval agent
+
+Printed state:
+{'final_answer': '## Answer\n'
+                 '\n'
+                 '### Active Projects\n'
+                 '**[SQL agent]**: According to the database, you currently '
+                 'have **4 active projects**.\n'
+                 '*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM '
+                 "projects WHERE status = 'active'`)*\n"
+                 '\n'
+                 '---\n'
+                 '\n'
+                 '### Onboarding Process\n'
+                 'Unfortunately, neither agent was able to provide information '
+                 'about the onboarding process:\n'
+                 '\n'
+                 '- **[SQL agent]**: This information is not available in the '
+                 'database, which only contains project data.\n'
+                 '- **[Retrieval agent]**: The available documents '
+                 '(*q2-2026-client-report.pdf*, '
+                 '*cloud-migration-playbook.pdf*, and '
+                 '*remote-work-policy.pdf*) do not contain any onboarding '
+                 'process details.\n'
+                 '\n'
+                 "To find your onboarding process, I'd recommend checking your "
+                 '**HR documentation, internal wiki, or contacting your '
+                 'HR/People Operations team** directly.',
+ 'question': 'How many active projects do we have, and what is our onboarding '
+             'process?',
+ 'retrieval_result': {'answer': 'I cannot find this information in the '
+                                'provided documents. The provided sources '
+                                'cover a Q2 2026 client engagement report, a '
+                                'cloud migration playbook, and a remote work '
+                                'policy, but none of them contain information '
+                                'about the total number of active projects or '
+                                'an onboarding process.',
+                      'metadata': {'chunk_count': 5,
+                                   'chunk_scores': [0.6551446,
+                                                    0.6503411,
+                                                    0.6377065,
+                                                    0.6073829,
+                                                    0.5888682],
+                                   'grounding_check': True,
+                                   'token_usage': {'input': 2433,
+                                                   'output': 60}},
+                      'sources': ['q2-2026-client-report.pdf',
+                                  'cloud-migration-playbook.pdf',
+                                  'q2-2026-client-report.pdf',
+                                  'remote-work-policy.pdf',
+                                  'cloud-migration-playbook.pdf'],
+                      'success': True},
+ 'route': 'both',
+ 'sql_result': {'answer': 'Based on the data, you have **4 active projects**.\n'
+                          '\n'
+                          'However, regarding the **onboarding process** — '
+                          'that information is **not available in the provided '
+                          'data**. The dataset only contains the active '
+                          'project count. You would need to consult your HR '
+                          'documentation, internal wiki, or relevant team '
+                          'members for onboarding process details.',
+                'metadata': {'token_usage': {'input': 50, 'output': 73},
+                             'validation': 'PASSED'},
+                'sources': ['SELECT COUNT(*) AS active_project_count\n'
+                            'FROM projects\n'
+                            "WHERE status = 'active'"],
+                'success': True},
+ 'token_usage': {'classification': {'input': 0,
+                                    'method': 'keyword_rules',
+                                    'output': 0},
+                 'retrieval_agent': {'input': 2433, 'output': 60},
+                 'sql_agent': {'input': 50, 'output': 73},
+                 'synthesis': {'input': 360, 'output': 196}}}
+
+Route: both
+SQL result present: True
+Retrieval result present: True
+Final answer:
+## Answer
+
+### Active Projects
+**[SQL agent]**: According to the database, you currently have **4 active projects**.
+*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM projects WHERE status = 'active'`)*
+
+---
+
+### Onboarding Process
+Unfortunately, neither agent was able to provide information about the onboarding process:
+
+- **[SQL agent]**: This information is not available in the database, which only contains project data.
+- **[Retrieval agent]**: The available documents (*q2-2026-client-report.pdf*, *cloud-migration-playbook.pdf*, and *remote-work-policy.pdf*) do not contain any onboarding process details.
+
+To find your onboarding process, I'd recommend checking your **HR documentation, internal wiki, or contacting your HR/People Operations team** directly.
+
+PASS: Step 4 routing and synthesis checks passed.
+
+5)
+valid SELECT: PASS
+  Query: SELECT COUNT(*) FROM projects
+  Expected valid: True
+  Actual valid: True
+  Reason: OK
+destructive statement: PASS
+  Query: DELETE FROM projects
+  Expected valid: False
+  Actual valid: False
+  Reason: Only SELECT queries are permitted.
+blocked word inside column name: PASS
+  Query: SELECT deleted_at FROM clients
+  Expected valid: True
+  Actual valid: True
+  Reason: OK
+stacked query with destructive keyword: PASS
+  Query: SELECT * FROM projects; DELETE FROM clients
+  Expected valid: False
+  Actual valid: False
+  Reason: Blocked: multiple statements detected.
+stacked query with two SELECT statements: PASS
+  Query: SELECT * FROM projects; SELECT * FROM clients
+  Expected valid: False
+  Actual valid: False
+  Reason: Blocked: multiple statements detected.
+
+PASS: All five SQL validator tests passed.
+
+6)from orchestrator import orchestrator; from tokenomics_logger import run_traced_query; run_traced_query(orchestrator, 'How many active projects do we have, and what does the remote work policy say?')"
+[LOG] query_start: {"trace_id": "bd08fba0"}
+[Router] route=both
+[Orchestrator] Calling SQL agent
+[Tokenomics] sql_generation | input=187 | output=24 | cost=$0.00092100
+[Tokenomics] sql_result_interpretation | input=50 | output=74 | cost=$0.00126000
+[Orchestrator] Calling retrieval agent
+[Tokenomics] retrieval_answer_generation | input=2497 | output=353 | cost=$0.01278600
+[Tokenomics] synthesis | input=653 | output=417 | cost=$0.00821400
+[LOG] query_complete: {"trace_id": "bd08fba0", "route": "both", "sql_validation": "PASSED", "retrieval_chunk_count": 5, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "sql_agent": {"input": 50, "output": 74}, "retrieval_agent": {"input": 2497, "output": 353}, "synthesis": {"input": 653, "output": 417}}}
+
+10-QUERY TOKENOMICS SUMMARY
+Queries run: 10
+Claude calls logged: 28
+
+Component                        Calls      Input     Output     Cost USD
+---------------------------------------------------------------------------
+retrieval_answer_generation          6      13106       1810 $ 0.06646800
+sql_generation                       6       1079        331 $ 0.00820200
+sql_result_interpretation            6        931        694 $ 0.01320300
+synthesis                           10       4462       3028 $ 0.05880600
+---------------------------------------------------------------------------
+Total cost: $0.14667900
+Most tokens: retrieval_answer_generation
+
+7)
+[LOG] query_start: {"trace_id": "166c9d66"}
+[Router] route=sql
+[Orchestrator] Calling SQL agent
+[Tokenomics] sql_generation | input=178 | output=24 | cost=$0.00089400
+[Tokenomics] sql_result_interpretation | input=41 | output=11 | cost=$0.00028800
+[Tokenomics] synthesis | input=159 | output=59 | cost=$0.00136200
+[LOG] query_complete: {"trace_id": "166c9d66", "route": "sql", "sql_validation": "PASSED", "retrieval_chunk_count": null, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "sql_agent": {"input": 41, "output": 11}, "synthesis": {"input": 159, "output": 59}}}
+
+================================================================================
+TEST 1: RDS only
+Question: How many active projects do we have?
+Route: sql
+SQL validation: PASSED
+SQL agent success: True
+Retrieval agent success: N/A
+SQL sources: ["SELECT COUNT(*) AS active_project_count\nFROM projects\nWHERE status = 'active'"]
+Retrieval sources: []
+Final answer:
+## Active Projects
+
+According to our database, we currently have **4 active projects**.
+
+*[SQL agent] — Source SQL:*
+```sql
+SELECT COUNT(*) AS active_project_count
+FROM projects
+WHERE status = 'active'
+```
+
+Result: PASS
+[LOG] query_start: {"trace_id": "724eb52e"}
+[Router] route=sql
+[Orchestrator] Calling SQL agent
+[Tokenomics] sql_generation | input=179 | output=14 | cost=$0.00074700
+[Tokenomics] sql_result_interpretation | input=40 | output=13 | cost=$0.00031500
+[Tokenomics] synthesis | input=152 | output=46 | cost=$0.00114600
+[LOG] query_complete: {"trace_id": "724eb52e", "route": "sql", "sql_validation": "PASSED", "retrieval_chunk_count": null, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "sql_agent": {"input": 40, "output": 13}, "synthesis": {"input": 152, "output": 46}}}
+
+================================================================================
+TEST 2: RDS only
+Question: How many projects do we have in total?
+Route: sql
+SQL validation: PASSED
+SQL agent success: True
+Retrieval agent success: N/A
+SQL sources: ['SELECT COUNT(*) AS total_projects FROM projects;']
+Retrieval sources: []
+Final answer:
+Based on the database query results:
+
+**[SQL agent]** We have a total of **6 projects**.
+*(Source SQL: `SELECT COUNT(*) AS total_projects FROM projects;`)*
+
+Result: PASS
+[LOG] query_start: {"trace_id": "ce39e4f2"}
+[Router] route=retrieval
+[Orchestrator] Calling retrieval agent
+[Tokenomics] retrieval_answer_generation | input=1916 | output=345 | cost=$0.01092300
+[Tokenomics] synthesis | input=526 | output=412 | cost=$0.00775800
+[LOG] query_complete: {"trace_id": "ce39e4f2", "route": "retrieval", "sql_validation": null, "retrieval_chunk_count": 5, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "retrieval_agent": {"input": 1916, "output": 345}, "synthesis": {"input": 526, "output": 412}}}
+
+================================================================================
+TEST 3: Documents only
+Question: What does the remote work policy say?
+Route: retrieval
+SQL validation: N/A
+SQL agent success: N/A
+Retrieval agent success: True
+SQL sources: []
+Retrieval sources: ['remote-work-policy.pdf', 'remote-work-policy.pdf', 'q2-2026-client-report.pdf', 'q2-2026-client-report.pdf', 'cloud-migration-playbook.pdf']
+Final answer:
+## Acme Consulting Remote Work Policy
+
+Based on **[Retrieval agent]** findings from **remote-work-policy.pdf**, here is what the remote work policy states:
+
+---
+
+### 👤 Eligibility
+Employees who have completed their **90-day probationary period** and whose role doesn't require regular physical presence on client premises are eligible. New hires hired as fully remote are exempt from the waiting period if documented in their offer letter.
+
+---
+
+### 🕐 Core Hours
+All remote employees must be available between **10:00 AM and 3:00 PM in their local time zone**. Employees traveling across time zones for more than three consecutive business days must notify their manager in advance.
+
+---
+
+### 💻 Equipment & Security
+- The company provides a **laptop, external monitor, and VPN access**
+- Company data must remain on **company-issued devices only**
+- **VPN is required at all times** when using public Wi-Fi
+- Lost or stolen equipment must be reported to IT Security **within four hours**
+
+---
+
+### 🏠 Home Office Stipend
+Employees may claim up to **$500 per year** for home office equipment (excluding internet/utilities). Claims must be submitted by **December 15**, and unused amounts do not roll over.
+
+---
+
+### 📊 Performance & Review
+Arrangements are reviewed **annually**. Managers must provide a **30-day improvement window** before revoking remote work privileges, except in cases of security policy violations.
+
+---
+
+### ✈️ Working Abroad
+Permitted for up to **20 business days per year**, subject to manager approval and an IT Security review.
+
+---
+
+> *Note: The [SQL agent] was not invoked for this question, as it pertains to policy documentation rather than database records.*
+
+Result: PASS
+[LOG] query_start: {"trace_id": "ed632d58"}
+[Router] route=retrieval
+[Orchestrator] Calling retrieval agent
+[Tokenomics] retrieval_answer_generation | input=1928 | output=346 | cost=$0.01097400
+[Tokenomics] synthesis | input=527 | output=461 | cost=$0.00849600
+[LOG] query_complete: {"trace_id": "ed632d58", "route": "retrieval", "sql_validation": null, "retrieval_chunk_count": 5, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "retrieval_agent": {"input": 1928, "output": 346}, "synthesis": {"input": 527, "output": 461}}}
+
+================================================================================
+TEST 4: Documents only
+Question: Explain the cloud migration process.
+Route: retrieval
+SQL validation: N/A
+SQL agent success: N/A
+Retrieval agent success: True
+SQL sources: []
+Retrieval sources: ['cloud-migration-playbook.pdf', 'cloud-migration-playbook.pdf', 'q2-2026-client-report.pdf', 'q2-2026-client-report.pdf', 'remote-work-policy.pdf']
+Final answer:
+## Cloud Migration Process
+
+Based on Acme Consulting's documented methodology, the cloud migration process follows four structured phases:
+
+---
+
+### **Phase 1: Discovery and Assessment**
+**[Retrieval agent]** (*Source: cloud-migration-playbook.pdf*) The process begins with a **two-to-four week discovery phase** that inventories existing systems, data volumes, and integration points. This phase produces:
+- A system inventory
+- A data classification summary (including regulated/sensitive data)
+- A preliminary risk register
+
+> ⚠️ Skipping this phase significantly increases the risk of schedule slippage during cutover.
+
+---
+
+### **Phase 2: Migration Strategy Selection**
+**[Retrieval agent]** (*Source: cloud-migration-playbook.pdf*) Three strategies are available depending on downtime tolerance and system complexity:
+- **Lift-and-shift** – Fastest, but carries forward existing schema problems
+- **Re-platform** – Modernizes the schema during migration; most common for clients with data quality issues
+- **Parallel-run** – Operates both systems simultaneously; recommended when downtime tolerance is near zero
+
+---
+
+### **Phase 3: Execution**
+**[Retrieval agent]** (*Source: cloud-migration-playbook.pdf*) Migrations are executed **in batches**, with each batch validated against source-system checksums before proceeding. A rollback plan must exist for every batch, and daily client communication is recommended throughout.
+
+---
+
+### **Phase 4: Validation and Cutover**
+**[Retrieval agent]** (*Source: cloud-migration-playbook.pdf*) Before final cutover, a full reconciliation is conducted covering:
+- Record counts
+- Checksums
+- Functional testing of downstream systems
+
+> ✅ Known data quality issues should be **remediated before cutover**, not migrated as-is.
+
+---
+
+**Note:** The [SQL agent] did not return any relevant database facts for this question, so this answer is based entirely on retrieved documents.
+
+Result: PASS
+[LOG] query_start: {"trace_id": "8e7f178a"}
+[Router] route=both
+[Orchestrator] Calling SQL agent
+[Tokenomics] sql_generation | input=187 | output=24 | cost=$0.00092100
+[Tokenomics] sql_result_interpretation | input=50 | output=58 | cost=$0.00102000
+[Orchestrator] Calling retrieval agent
+[Tokenomics] retrieval_answer_generation | input=2497 | output=318 | cost=$0.01226100
+[Tokenomics] synthesis | input=602 | output=352 | cost=$0.00708600
+[LOG] query_complete: {"trace_id": "8e7f178a", "route": "both", "sql_validation": "PASSED", "retrieval_chunk_count": 5, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "sql_agent": {"input": 50, "output": 58}, "retrieval_agent": {"input": 2497, "output": 318}, "synthesis": {"input": 602, "output": 352}}}
+
+================================================================================
+TEST 5: Both RDS and documents
+Question: How many active projects do we have, and what does the remote work policy say?
+Route: both
+SQL validation: PASSED
+SQL agent success: True
+Retrieval agent success: True
+SQL sources: ["SELECT COUNT(*) AS active_project_count\nFROM projects\nWHERE status = 'active'"]
+Retrieval sources: ['remote-work-policy.pdf', 'remote-work-policy.pdf', 'q2-2026-client-report.pdf', 'q2-2026-client-report.pdf', 'cloud-migration-playbook.pdf']
+Final answer:
+## Active Projects & Remote Work Policy
+
+---
+
+### 📊 Number of Active Projects
+
+**You have 4 active projects.**
+
+> **[SQL agent]** — Queried directly from the database:
+> ```sql
+> SELECT COUNT(*) AS active_project_count
+> FROM projects
+> WHERE status = 'active';
+> ```
+
+---
+
+### 🏠 Remote Work Policy
+
+**[Retrieval agent]** — The following details come from **remote-work-policy.pdf** (effective January 1, 2026):
+
+- **Eligibility:** Employees who have completed their **90-day probationary period** and do not require regular physical presence at client sites. New hires hired as fully remote are exempt from the waiting period if documented in their offer letter.
+
+- **Core Hours:** All remote employees must be available **10:00 AM – 3:00 PM** in their local time zone.
+
+- **Equipment:** The company provides a laptop, monitor, and VPN access. Company data must remain on company-issued devices only.
+
+- **Home Office Stipend:** Up to **$500/year**, submitted by December 15, with no rollover to the next year.
+
+- **International Remote Work:** Permitted up to **20 business days/year**, subject to manager and IT Security approval.
+
+---
+
+### Summary
+| Topic | Answer | Source |
+|-------|--------|--------|
+| Active projects | 4 | [SQL agent] |
+| Remote work policy details | See above | [Retrieval agent] |
+
+Result: PASS
+[LOG] query_start: {"trace_id": "e564066d"}
+[Router] route=both
+[Orchestrator] Calling SQL agent
+[Tokenomics] sql_generation | input=186 | output=13 | cost=$0.00075300
+[Tokenomics] sql_result_interpretation | input=47 | output=301 | cost=$0.00465600
+[Orchestrator] Calling retrieval agent
+[Tokenomics] retrieval_answer_generation | input=1937 | output=354 | cost=$0.01112100
+[Tokenomics] synthesis | input=870 | output=442 | cost=$0.00924000
+[LOG] query_complete: {"trace_id": "e564066d", "route": "both", "sql_validation": "PASSED", "retrieval_chunk_count": 5, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "sql_agent": {"input": 47, "output": 301}, "retrieval_agent": {"input": 1937, "output": 354}, "synthesis": {"input": 870, "output": 442}}}
+
+================================================================================
+TEST 6: Both RDS and documents
+Question: How many projects do we have in total, and explain the cloud migration process.
+Route: both
+SQL validation: PASSED
+SQL agent success: True
+Retrieval agent success: True
+SQL sources: ['SELECT COUNT(*) AS total_projects FROM projects']
+Retrieval sources: ['cloud-migration-playbook.pdf', 'cloud-migration-playbook.pdf', 'q2-2026-client-report.pdf', 'q2-2026-client-report.pdf', 'remote-work-policy.pdf']
+Final answer:
+## Total Number of Projects
+
+**There are 6 projects in total.**
+
+[SQL agent] This figure comes directly from the projects table in the database:
+`SELECT COUNT(*) AS total_projects FROM projects`
+
+---
+
+## Cloud Migration Process
+
+The cloud migration process is well-documented and consists of the following phases:
+
+### Phase 1 – Discovery and Assessment *(2–4 weeks)*
+[Retrieval agent] A system inventory is conducted, covering data volumes, integration points, sensitive data categories, and a preliminary risk register. Importantly, integration complexity should not be underweighted relative to raw data volume. *(Source: cloud-migration-playbook.pdf)*
+
+### Phase 2 – Migration Strategy Selection
+[Retrieval agent] Three core strategies are available *(Source: cloud-migration-playbook.pdf)*:
+- **Lift-and-Shift** – Fastest approach, but carries forward any existing schema problems
+- **Re-platform** – Modernizes the schema; best suited for clients with data quality issues
+- **Parallel-Run** – Both old and new systems run simultaneously; recommended when near-zero downtime is required
+
+### Phase 3 – Execution
+[Retrieval agent] Migrations are executed **in batches**, with validation checkpoints and rollback plans at every stage. Daily client communication is recommended throughout this phase. *(Source: cloud-migration-playbook.pdf)*
+
+### Phase 4 – Validation and Cutover
+[Retrieval agent] A full reconciliation between source and target systems is performed, including record counts, checksums, and functional testing. Known data quality issues should be remediated **before** cutover. *(Source: cloud-migration-playbook.pdf)*
+
+---
+
+> **Note:** The [Retrieval agent] could not confirm the total project count from documents alone, as the available documents did not contain that information. The count of **6 projects** is solely attributable to the [SQL agent] database query.
+
+Result: PASS
+[LOG] query_start: {"trace_id": "33f5da18"}
+[Router] route=sql
+[Orchestrator] Calling SQL agent
+[Tokenomics] sql_generation | input=177 | output=7 | cost=$0.00063600
+[Tokenomics] synthesis | input=144 | output=113 | cost=$0.00212700
+[LOG] query_complete: {"trace_id": "33f5da18", "route": "sql", "sql_validation": "BLOCKED", "retrieval_chunk_count": null, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "sql_agent": {"input": 0, "output": 0}, "synthesis": {"input": 144, "output": 113}}}
+
+================================================================================
+TEST 7: Unsafe SQL request
+Question: Delete all projects from the database.
+Route: sql
+SQL validation: BLOCKED
+SQL agent success: False
+Retrieval agent success: N/A
+SQL sources: ['DELETE FROM projects;']
+Retrieval sources: []
+Final answer:
+I'm sorry, but I am **unable to delete all projects from the database**.
+
+**[SQL agent]** The operation was blocked and did not succeed. The system only permits **SELECT (read-only) queries** — data modification commands such as `DELETE` are not allowed. The attempted query `DELETE FROM projects;` was explicitly blocked for safety reasons.
+
+**No data has been deleted.** If you need to remove projects from the database, please contact a database administrator who has the appropriate permissions to perform destructive operations.
+
+Result: PASS
+[LOG] query_start: {"trace_id": "f89bba89"}
+[Router] route=retrieval
+[Orchestrator] Calling retrieval agent
+[Tokenomics] retrieval_answer_generation | input=2394 | output=52 | cost=$0.00796200
+[Tokenomics] synthesis | input=244 | output=147 | cost=$0.00293700
+[LOG] query_complete: {"trace_id": "f89bba89", "route": "retrieval", "sql_validation": null, "retrieval_chunk_count": 5, "token_usage": {"classification": {"method": "keyword_rules", "input": 0, "output": 0}, "retrieval_agent": {"input": 2394, "output": 52}, "synthesis": {"input": 244, "output": 147}}}
+
+================================================================================
+TEST 8: Unanswerable
+Question: What is the office cafeteria menu for next week?
+Route: retrieval
+SQL validation: N/A
+SQL agent success: N/A
+Retrieval agent success: True
+SQL sources: []
+Retrieval sources: ['retail-supply-chain-case-study.pdf', 'retail-supply-chain-case-study.pdf', 'q2-2026-client-report.pdf', 'remote-work-policy.pdf', 'q2-2026-client-report.pdf']
+Final answer:
+I'm sorry, but I was unable to find information about the office cafeteria menu for next week.
+
+- **[Retrieval agent]** confirmed that the available documents (retail-supply-chain-case-study.pdf, q2-2026-client-report.pdf, and remote-work-policy.pdf) do not contain any information related to an office cafeteria menu.
+- The **[SQL agent]** did not return any relevant results for this query.
+
+I would suggest checking directly with your office facilities team, an internal intranet page, or any posted notices in the cafeteria itself for the most up-to-date menu information.
+
+Result: PASS
+
+================================================================================
+STEP 7 PASS: All 8 tests met their expectations.
+
+8)

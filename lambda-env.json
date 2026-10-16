@@ -1,0 +1,13 @@
+{
+  "Variables": {
+    "RDS_HOST": "orchestrator-lesson.c6bg242awg4x.us-east-1.rds.amazonaws.com",
+    "RDS_PORT": "5432",
+    "RDS_DATABASE": "postgres",
+    "RDS_USER": "mmilosevic",
+    "RDS_PASSWORD": "YourSecurePassword123",
+    "OPENSEARCH_ENDPOINT": "search-vector-search-lesson-ndxswy7wb2ippltzkkxmmu5pli.us-east-1.es.amazonaws.com",
+    "BEDROCK_INPUT_PRICE_PER_1M": "3.00",
+    "BEDROCK_OUTPUT_PRICE_PER_1M": "15.00",
+    "TOKENOMICS_LOG_FILE": "/tmp/tokenomics.jsonl"
+  }
+}
