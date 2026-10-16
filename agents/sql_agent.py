@@ -12,6 +12,7 @@ zip. Every piece of logic (generate_sql, validate_sql, execute_query_safely)
 is inlined directly here instead, so this file is genuinely self-contained
 and deployable on its own.
 """
+import re
 from agents.result import agent_result
 import os
 import psycopg2
@@ -35,27 +36,49 @@ BLOCKED_KEYWORDS = ["DROP", "DELETE", "UPDATE", "INSERT", "ALTER", "TRUNCATE",
 
 
 def validate_sql(query: str) -> dict:
-    """
-    Blocks any query that isn't a SELECT, contains a destructive keyword, or
-    stacks multiple statements. This must run before any database call.
-    """
-    query_upper = query.upper().strip()
+    """Allow one SELECT statement and block unsafe or stacked SQL."""
+
+    if not isinstance(query, str) or not query.strip():
+        return {
+            "valid": False,
+            "reason": "Query is empty.",
+        }
+
+    query_text = query.strip()
+
+    # A single final semicolon is allowed.
+    # Any semicolon before the final character means multiple statements.
+    query_without_final_semicolon = (
+        query_text[:-1]
+        if query_text.endswith(";")
+        else query_text
+    )
+
+    if ";" in query_without_final_semicolon:
+        return {
+            "valid": False,
+            "reason": "Blocked: multiple statements detected.",
+        }
+
+    if not re.match(r"^SELECT\b", query_text, flags=re.IGNORECASE):
+        return {
+            "valid": False,
+            "reason": "Only SELECT queries are permitted.",
+        }
 
     for keyword in BLOCKED_KEYWORDS:
-        if f" {keyword} " in f" {query_upper} " or query_upper.startswith(keyword):
-            return {"valid": False, "reason": f"Blocked: '{keyword}' is not permitted."}
+        pattern = rf"\b{re.escape(keyword)}\b"
 
-    if not query_upper.startswith("SELECT"):
-        return {"valid": False, "reason": "Only SELECT queries are permitted."}
+        if re.search(pattern, query_text, flags=re.IGNORECASE):
+            return {
+                "valid": False,
+                "reason": f"Blocked: '{keyword}' is not permitted.",
+            }
 
-    # Block stacked queries independently of keyword content -- a stacked
-    # query with two harmless-looking SELECTs would sail past every keyword
-    # check above, since there's nothing destructive in either half.
-    stripped = query.strip().rstrip(";")
-    if ";" in stripped:
-        return {"valid": False, "reason": "Blocked: multiple statements detected."}
-
-    return {"valid": True, "reason": "OK"}
+    return {
+        "valid": True,
+        "reason": "OK",
+    }
 
 
 def generate_sql(question: str) -> str:
@@ -71,24 +94,47 @@ def generate_sql(question: str) -> str:
 
 def execute_query_safely(sql: str) -> dict:
     validation = validate_sql(sql)
+
     if not validation["valid"]:
-        return {"success": False, "error": validation["reason"], "validation": "BLOCKED", "sql": sql}
+        return {
+            "success": False,
+            "error": validation["reason"],
+            "validation": "BLOCKED",
+            "sql": sql,
+        }
 
     try:
         conn = psycopg2.connect(
-            host=os.getenv("RDS_HOST"), port=int(os.getenv("RDS_PORT")),
-            dbname=os.getenv("RDS_DATABASE"), user=os.getenv("RDS_USER"),
-            password=os.getenv("RDS_PASSWORD")
+            host=os.getenv("RDS_HOST"),
+            port=int(os.getenv("RDS_PORT")),
+            dbname=os.getenv("RDS_DATABASE"),
+            user=os.getenv("RDS_USER"),
+            password=os.getenv("RDS_PASSWORD"),
         )
+
         cur = conn.cursor()
         cur.execute(sql)
         rows = cur.fetchall()
-        cols = [d[0] for d in cur.description]
-        conn.close()
-        return {"success": True, "columns": cols, "rows": rows, "validation": "PASSED", "sql": sql}
-    except Exception as e:
-        return {"success": False, "error": str(e), "validation": "EXECUTION_ERROR", "sql": sql}
+        columns = [description[0] for description in cur.description]
 
+        cur.close()
+        conn.close()
+
+        return {
+            "success": True,
+            "columns": columns,
+            "rows": rows,
+            "validation": "PASSED",
+            "sql": sql,
+        }
+
+    except Exception as error:
+        return {
+            "success": False,
+            "error": str(error),
+            "validation": "EXECUTION_ERROR",
+            "sql": sql,
+        }
 
 def validated_sql_agent(question: str) -> dict:
     sql = generate_sql(question)

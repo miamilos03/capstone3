@@ -247,3 +247,32 @@ Unfortunately, neither agent was able to provide information about the onboardin
 To find your onboarding process, I'd recommend checking your **HR documentation, internal wiki, or contacting your HR/People Operations team** directly.
 
 PASS: Step 4 routing and synthesis checks passed.
+
+5)
+valid SELECT: PASS
+  Query: SELECT COUNT(*) FROM projects
+  Expected valid: True
+  Actual valid: True
+  Reason: OK
+destructive statement: PASS
+  Query: DELETE FROM projects
+  Expected valid: False
+  Actual valid: False
+  Reason: Only SELECT queries are permitted.
+blocked word inside column name: PASS
+  Query: SELECT deleted_at FROM clients
+  Expected valid: True
+  Actual valid: True
+  Reason: OK
+stacked query with destructive keyword: PASS
+  Query: SELECT * FROM projects; DELETE FROM clients
+  Expected valid: False
+  Actual valid: False
+  Reason: Blocked: multiple statements detected.
+stacked query with two SELECT statements: PASS
+  Query: SELECT * FROM projects; SELECT * FROM clients
+  Expected valid: False
+  Actual valid: False
+  Reason: Blocked: multiple statements detected.
+
+PASS: All five SQL validator tests passed.
