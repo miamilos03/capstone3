@@ -7,3 +7,5 @@ invoices: 7 rows
 projects: 6 rows
 /home/du_356061-1790187634/document-ingestion-pipeline-lab/.venv/bin/python /home/du_356061-1790187634/document-ingestion-pipeline-lab/check_opensearch.py
 Document count: 8
+
+2)

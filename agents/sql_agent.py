@@ -12,6 +12,7 @@ zip. Every piece of logic (generate_sql, validate_sql, execute_query_safely)
 is inlined directly here instead, so this file is genuinely self-contained
 and deployable on its own.
 """
+from agents.result import agent_result
 import os
 import psycopg2
 from dotenv import load_dotenv
@@ -116,11 +117,35 @@ def validated_sql_agent(question: str) -> dict:
 
 
 def run_sql_agent(question: str) -> dict:
-    """Standardized wrapper matching the Shared Tool Registry lab's interface."""
-    result = validated_sql_agent(question)
-    return {
-        "success": result["validation"] == "PASSED",
-        "answer": result["answer"],
-        "sources": [f"SQL: {result['sql']}"],
-        "metadata": {"validation": result["validation"], "token_usage": result["token_usage"]},
-    }
+    try:
+        result = validated_sql_agent(question)
+    except Exception as error:
+        return agent_result(
+            success=False,
+            answer="The SQL agent could not answer this question.",
+            sources=[],
+            metadata={
+                "validation": "NOT_COMPLETED",
+                "error_type": type(error).__name__,
+                "token_usage": {"input": 0, "output": 0},
+            },
+        )
+
+    sql = result.get("sql", "")
+    validation = result.get("validation", "NOT_COMPLETED")
+
+    return agent_result(
+        success=validation == "PASSED",
+        answer=result.get(
+            "answer",
+            "The SQL agent could not answer this question.",
+        ),
+        sources=[sql] if sql else [],
+        metadata={
+            "validation": validation,
+            "token_usage": result.get(
+                "token_usage",
+                {"input": 0, "output": 0},
+            ),
+        },
+    )

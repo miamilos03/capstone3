@@ -8,6 +8,7 @@ see onnx_embed.py's docstring for why (PyTorch's size alone exceeds Lambda's
 package limit) and for the verification that confirms this produces
 numerically equivalent vectors to the original sentence-transformers model.
 """
+from agents.result import agent_result
 import os
 import boto3
 from opensearchpy import OpenSearch, RequestsHttpConnection
@@ -64,23 +65,49 @@ def check_grounding(answer: str, chunks: list[dict]) -> bool:
 
 
 def run_retrieval_agent(question: str) -> dict:
-    chunks = retrieve(question)
-    if not chunks:
-        return {
-            "success": False,
-            "answer": "No relevant documents found.",
-            "sources": [],
-            "metadata": {"chunk_count": 0, "grounded": False, "token_usage": {"input": 0, "output": 0}},
-        }
+    try:
+        chunks = retrieve(question)
 
-    answer, usage = generate_cited_answer(question, chunks)
-    return {
-        "success": True,
-        "answer": answer,
-        "sources": [c["source"] for c in chunks],
-        "metadata": {
-            "chunk_count": len(chunks),
-            "grounded": check_grounding(answer, chunks),
-            "token_usage": usage,
-        },
-    }
+        if not chunks:
+            return agent_result(
+                success=False,
+                answer="No relevant documents found.",
+                sources=[],
+                metadata={
+                    "chunk_count": 0,
+                    "chunk_scores": [],
+                    "grounding_check": False,
+                    "token_usage": {"input": 0, "output": 0},
+                },
+            )
+
+        answer, usage = generate_cited_answer(question, chunks)
+
+        return agent_result(
+            success=True,
+            answer=answer,
+            sources=[chunk["source"] for chunk in chunks],
+            metadata={
+                "chunk_count": len(chunks),
+                "chunk_scores": [chunk["score"] for chunk in chunks],
+                "grounding_check": check_grounding(answer, chunks),
+                "token_usage": usage,
+            },
+        )
+
+    except Exception as error:
+        print(f"RETRIEVAL ERROR [{type(error).__name__}]: {error}")
+
+        return agent_result(
+            success=False,
+            answer="The retrieval agent could not answer this question.",
+            sources=[],
+            metadata={
+                "chunk_count": 0,
+                "chunk_scores": [],
+                "grounding_check": False,
+                "error_type": type(error).__name__,
+                "error_message": str(error),
+                "token_usage": {"input": 0, "output": 0},
+            },
+        )
