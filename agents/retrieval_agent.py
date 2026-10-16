@@ -52,7 +52,11 @@ def generate_cited_answer(question: str, chunks: list[dict]) -> tuple[str, dict]
         "Always cite the source number(s) you used.\n\n"
         f"CONTEXT:\n{context}\n\nQUESTION: {question}\n\nANSWER:"
     )
-    result = invoke_claude(prompt, max_tokens=500)
+    result = invoke_claude(
+    prompt,
+    max_tokens=500,
+    component="retrieval_answer_generation",
+)
     return result["text"], {"input": result["input_tokens"], "output": result["output_tokens"]}
 
 

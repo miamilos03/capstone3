@@ -188,7 +188,11 @@ def synthesise(state: OrchestratorState) -> dict:
         "Final answer:"
     )
 
-    result = invoke_claude(prompt, max_tokens=800)
+    result = invoke_claude(
+    prompt,
+    max_tokens=800,
+    component="synthesis",
+)
 
     usage = dict(state.get("token_usage") or {})
     usage["synthesis"] = {
