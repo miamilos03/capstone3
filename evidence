@@ -39,3 +39,211 @@ Callable registered: True
 Tool: run_retrieval_agent
 Description: Use for questions answered from indexed documents, including onboarding procedures, policies, operating processes, guidelines, definitions, and other narrative content. Do not use for database counts, financial calculations, project statuses, or questions requiring current RDS records.
 Callable registered: True
+
+4)
+
+======================================================================
+SQL-ONLY TEST
+Question: How many active projects do we have?
+[Router] route=sql
+[Orchestrator] Calling SQL agent
+
+Printed state:
+{'final_answer': 'Based on the available data:\n'
+                 '\n'
+                 '**[SQL agent]** There are **4 active projects** in the '
+                 'database.\n'
+                 '*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM '
+                 "projects WHERE status = 'active'`)*",
+ 'question': 'How many active projects do we have?',
+ 'retrieval_result': None,
+ 'route': 'sql',
+ 'sql_result': {'answer': 'There are **4** active projects.',
+                'metadata': {'token_usage': {'input': 41, 'output': 11},
+                             'validation': 'PASSED'},
+                'sources': ['SELECT COUNT(*) AS active_project_count\n'
+                            'FROM projects\n'
+                            "WHERE status = 'active'"],
+                'success': True},
+ 'token_usage': {'classification': {'input': 0,
+                                    'method': 'keyword_rules',
+                                    'output': 0},
+                 'sql_agent': {'input': 41, 'output': 11},
+                 'synthesis': {'input': 159, 'output': 55}}}
+
+Route: sql
+SQL result present: True
+Retrieval result present: False
+Final answer:
+Based on the available data:
+
+**[SQL agent]** There are **4 active projects** in the database.
+*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM projects WHERE status = 'active'`)*
+
+======================================================================
+RETRIEVAL-ONLY TEST
+Question: What is our onboarding process?
+[Router] route=retrieval
+[Orchestrator] Calling retrieval agent
+
+Printed state:
+{'final_answer': "Based on the agent results available, I'm unable to answer "
+                 'your question about the onboarding process.\n'
+                 '\n'
+                 '**[Retrieval agent]** searched through the available '
+                 'documents — including `q2-2026-client-report.pdf`, '
+                 '`cloud-migration-playbook.pdf`, and `remote-work-policy.pdf` '
+                 '— but none of these sources contain information about an '
+                 'onboarding process.\n'
+                 '\n'
+                 'No SQL database results were relevant to this question '
+                 'either.\n'
+                 '\n'
+                 '**Recommendation:** You may want to check if there is a '
+                 'dedicated onboarding document (e.g., an employee handbook, '
+                 "onboarding guide, or HR policy document) that hasn't been "
+                 'uploaded to the system yet. If such a document exists, '
+                 'adding it to the knowledge base would allow me to answer '
+                 'this question accurately.',
+ 'question': 'What is our onboarding process?',
+ 'retrieval_result': {'answer': 'I cannot find this information in the '
+                                'provided documents. The provided sources '
+                                'cover topics such as a client engagement '
+                                'report, a cloud migration playbook, and a '
+                                'remote work policy, but none of them contain '
+                                'information about an onboarding process.',
+                      'metadata': {'chunk_count': 5,
+                                   'chunk_scores': [0.666226,
+                                                    0.6661491,
+                                                    0.661102,
+                                                    0.6295325,
+                                                    0.6156007],
+                                   'grounding_check': True,
+                                   'token_usage': {'input': 2424,
+                                                   'output': 50}},
+                      'sources': ['q2-2026-client-report.pdf',
+                                  'cloud-migration-playbook.pdf',
+                                  'q2-2026-client-report.pdf',
+                                  'cloud-migration-playbook.pdf',
+                                  'remote-work-policy.pdf'],
+                      'success': True},
+ 'route': 'retrieval',
+ 'sql_result': None,
+ 'token_usage': {'classification': {'input': 0,
+                                    'method': 'keyword_rules',
+                                    'output': 0},
+                 'retrieval_agent': {'input': 2424, 'output': 50},
+                 'synthesis': {'input': 232, 'output': 169}}}
+
+Route: retrieval
+SQL result present: False
+Retrieval result present: True
+Final answer:
+Based on the agent results available, I'm unable to answer your question about the onboarding process.
+
+**[Retrieval agent]** searched through the available documents — including `q2-2026-client-report.pdf`, `cloud-migration-playbook.pdf`, and `remote-work-policy.pdf` — but none of these sources contain information about an onboarding process.
+
+No SQL database results were relevant to this question either.
+
+**Recommendation:** You may want to check if there is a dedicated onboarding document (e.g., an employee handbook, onboarding guide, or HR policy document) that hasn't been uploaded to the system yet. If such a document exists, adding it to the knowledge base would allow me to answer this question accurately.
+
+======================================================================
+BOTH-SOURCES TEST
+Question: How many active projects do we have, and what is our onboarding process?
+[Router] route=both
+[Orchestrator] Calling SQL agent
+[Orchestrator] Calling retrieval agent
+
+Printed state:
+{'final_answer': '## Answer\n'
+                 '\n'
+                 '### Active Projects\n'
+                 '**[SQL agent]**: According to the database, you currently '
+                 'have **4 active projects**.\n'
+                 '*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM '
+                 "projects WHERE status = 'active'`)*\n"
+                 '\n'
+                 '---\n'
+                 '\n'
+                 '### Onboarding Process\n'
+                 'Unfortunately, neither agent was able to provide information '
+                 'about the onboarding process:\n'
+                 '\n'
+                 '- **[SQL agent]**: This information is not available in the '
+                 'database, which only contains project data.\n'
+                 '- **[Retrieval agent]**: The available documents '
+                 '(*q2-2026-client-report.pdf*, '
+                 '*cloud-migration-playbook.pdf*, and '
+                 '*remote-work-policy.pdf*) do not contain any onboarding '
+                 'process details.\n'
+                 '\n'
+                 "To find your onboarding process, I'd recommend checking your "
+                 '**HR documentation, internal wiki, or contacting your '
+                 'HR/People Operations team** directly.',
+ 'question': 'How many active projects do we have, and what is our onboarding '
+             'process?',
+ 'retrieval_result': {'answer': 'I cannot find this information in the '
+                                'provided documents. The provided sources '
+                                'cover a Q2 2026 client engagement report, a '
+                                'cloud migration playbook, and a remote work '
+                                'policy, but none of them contain information '
+                                'about the total number of active projects or '
+                                'an onboarding process.',
+                      'metadata': {'chunk_count': 5,
+                                   'chunk_scores': [0.6551446,
+                                                    0.6503411,
+                                                    0.6377065,
+                                                    0.6073829,
+                                                    0.5888682],
+                                   'grounding_check': True,
+                                   'token_usage': {'input': 2433,
+                                                   'output': 60}},
+                      'sources': ['q2-2026-client-report.pdf',
+                                  'cloud-migration-playbook.pdf',
+                                  'q2-2026-client-report.pdf',
+                                  'remote-work-policy.pdf',
+                                  'cloud-migration-playbook.pdf'],
+                      'success': True},
+ 'route': 'both',
+ 'sql_result': {'answer': 'Based on the data, you have **4 active projects**.\n'
+                          '\n'
+                          'However, regarding the **onboarding process** — '
+                          'that information is **not available in the provided '
+                          'data**. The dataset only contains the active '
+                          'project count. You would need to consult your HR '
+                          'documentation, internal wiki, or relevant team '
+                          'members for onboarding process details.',
+                'metadata': {'token_usage': {'input': 50, 'output': 73},
+                             'validation': 'PASSED'},
+                'sources': ['SELECT COUNT(*) AS active_project_count\n'
+                            'FROM projects\n'
+                            "WHERE status = 'active'"],
+                'success': True},
+ 'token_usage': {'classification': {'input': 0,
+                                    'method': 'keyword_rules',
+                                    'output': 0},
+                 'retrieval_agent': {'input': 2433, 'output': 60},
+                 'sql_agent': {'input': 50, 'output': 73},
+                 'synthesis': {'input': 360, 'output': 196}}}
+
+Route: both
+SQL result present: True
+Retrieval result present: True
+Final answer:
+## Answer
+
+### Active Projects
+**[SQL agent]**: According to the database, you currently have **4 active projects**.
+*(Source SQL: `SELECT COUNT(*) AS active_project_count FROM projects WHERE status = 'active'`)*
+
+---
+
+### Onboarding Process
+Unfortunately, neither agent was able to provide information about the onboarding process:
+
+- **[SQL agent]**: This information is not available in the database, which only contains project data.
+- **[Retrieval agent]**: The available documents (*q2-2026-client-report.pdf*, *cloud-migration-playbook.pdf*, and *remote-work-policy.pdf*) do not contain any onboarding process details.
+
+To find your onboarding process, I'd recommend checking your **HR documentation, internal wiki, or contacting your HR/People Operations team** directly.
+
+PASS: Step 4 routing and synthesis checks passed.
