@@ -8,4 +8,23 @@ projects: 6 rows
 /home/du_356061-1790187634/document-ingestion-pipeline-lab/.venv/bin/python /home/du_356061-1790187634/document-ingestion-pipeline-lab/check_opensearch.py
 Document count: 8
 
-2)
+2) 
+/home/du_356061-1790187634/deployment-patterns-on-aws/capstone3/.venv/bin/python /home/du_356061-1790187634/deployment-patterns-on-aws/capstone3/check_agents.py
+
+SQL agent
+Question: How many active projects do we have?
+Top-level keys: ['success', 'answer', 'sources', 'metadata']
+Exact interface: True
+Success: True
+Sources: ["SELECT COUNT(*) AS active_project_count\nFROM projects\nWHERE status = 'active'"]
+Metadata keys: ['validation', 'token_usage']
+
+Retrieval agent
+Question: What is our onboarding process?
+Top-level keys: ['success', 'answer', 'sources', 'metadata']
+Exact interface: True
+Success: True
+Sources: ['q2-2026-client-report.pdf', 'cloud-migration-playbook.pdf', 'q2-2026-client-report.pdf', 'cloud-migration-playbook.pdf', 'remote-work-policy.pdf']
+Metadata keys: ['chunk_count', 'chunk_scores', 'grounding_check', 'token_usage']
+
+PASS: Both tools share the required interface.
